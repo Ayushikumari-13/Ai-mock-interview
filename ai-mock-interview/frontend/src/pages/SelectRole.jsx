@@ -23,29 +23,25 @@ export default function SelectRole() {
 
   return (
     <div style={container}>
-      
-      <div style={wrapper}>
-        <h1 style={title}>Select Interview Role 🚀</h1>
+      <h1 style={title}>Select Interview Role 🚀</h1>
 
-        <div style={grid}>
-          {roles.map((role, i) => (
-            <div
-              key={i}
-              style={card}
-              onClick={() =>
-                navigate("/interview", { state: { role: role.title } })
-              }
-            >
-              <div style={icon}>{role.icon}</div>
+      <div style={grid}>
+        {roles.map((role, i) => (
+          <div
+            key={i}
+            style={card}
+            onClick={() =>
+              navigate("/interview", { state: { role: role.title } })
+            }
+          >
+            <div style={icon}>{role.icon}</div>
 
-              <h2>{role.title}</h2>
+            <h2 style={cardTitle}>{role.title}</h2>
 
-              <p style={{ color: "#aaa" }}>{role.desc}</p>
-            </div>
-          ))}
-        </div>
+            <p style={desc}>{role.desc}</p>
+          </div>
+        ))}
       </div>
-
     </div>
   );
 }
@@ -54,41 +50,55 @@ export default function SelectRole() {
 // 🎨 STYLES
 
 const container = {
-  width: "100%",
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "linear-gradient(135deg, #020617, #0f172a)",
+  color: "#fff",
   padding: "20px"
 };
 
-const wrapper = {
-  maxWidth: "1000px",
-  margin: "auto"
-};
-
 const title = {
+  fontSize: "36px",
+  marginBottom: "50px",
   textAlign: "center",
-  marginBottom: "30px",
-  fontSize: "28px"
+  background: "linear-gradient(90deg, #6366f1, #22d3ee)",
+  WebkitBackgroundClip: "text",
+  WebkitTextFillColor: "transparent"
 };
 
 const grid = {
-  display: "flex",
-  gap: "20px",
-  justifyContent: "center",
-  flexWrap: "wrap"
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+  gap: "30px",
+  width: "100%",
+  maxWidth: "900px"
 };
 
 const card = {
-  width: "260px",
-  height: "170px",
-  background: "#111827",
-  borderRadius: "15px",
-  padding: "20px",
-  cursor: "pointer",
+  background: "rgba(255,255,255,0.05)",
+  backdropFilter: "blur(15px)",
+  padding: "30px",
+  borderRadius: "20px",
   textAlign: "center",
-  transition: "0.3s",
-  boxShadow: "0 0 10px rgba(0,0,0,0.3)"
+  cursor: "pointer",
+  transition: "all 0.3s ease",
+  boxShadow: "0 0 20px rgba(0,0,0,0.3)"
 };
 
 const icon = {
-  fontSize: "28px",
+  fontSize: "40px",
+  marginBottom: "15px"
+};
+
+const cardTitle = {
+  fontSize: "22px",
   marginBottom: "10px"
+};
+
+const desc = {
+  color: "#9ca3af",
+  fontSize: "14px"
 };

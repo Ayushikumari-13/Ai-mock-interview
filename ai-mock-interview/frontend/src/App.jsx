@@ -6,33 +6,34 @@ import Interview from "./pages/Interview";
 import History from "./pages/History";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import SelectRole from "./pages/SelectRole";
 
 import Layout from "./components/Layout";
-import SelectRole from "./pages/SelectRole";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
 
-        {/* 🔥 HOME (NO SIDEBAR) */}
+        {/* 🏠 HOME (NO SIDEBAR) */}
         <Route path="/" element={<Home />} />
 
-        {/* 🔥 ALL MAIN PAGES WITH SIDEBAR */}
+        {/* 🔥 ALL PAGES WITH SIDEBAR */}
         <Route element={<Layout />}>
 
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/interview" element={<Interview />} />
           <Route path="/history" element={<History />} />
-
-          {/* 🔥 FIX: ROLE SELECT ALSO INSIDE LAYOUT */}
           <Route path="/select-role" element={<SelectRole />} />
 
         </Route>
 
-        {/* 🔐 AUTH PAGES */}
+        {/* 🔐 AUTH */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+        {/* ❌ 404 PAGE FIX */}
+        <Route path="*" element={<h1 style={{color:"#fff",textAlign:"center"}}>Page Not Found ❌</h1>} />
 
       </Routes>
     </BrowserRouter>

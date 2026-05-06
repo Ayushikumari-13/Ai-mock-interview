@@ -1,6 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 
 const Interview = () => {
+  const location = useLocation();
+
   const [role, setRole] = useState("Frontend Developer");
   const [interviewId, setInterviewId] = useState(null);
   const [question, setQuestion] = useState("");
@@ -9,10 +12,28 @@ const Interview = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [result, setResult] = useState(null);
   const [videoOn, setVideoOn] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const videoRef = useRef(null);
+
+  // 🔥 ROLE FROM SELECT PAGE
+  useEffect(() => {
+    if (location.state?.role) {
+      setRole(location.state.role);
+    }
+  }, [location.state]);
 
   // 🎙️ VOICE INPUT
   const startVoice = () => {
-    const recognition = new window.webkitSpeechRecognition();
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Voice not supported ❌");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
     recognition.lang = "en-IN";
 
     recognition.onresult = (event) => {
@@ -24,33 +45,61 @@ const Interview = () => {
 
   // 🎥 CAMERA
   const startCamera = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    const video = document.getElementById("video");
-    video.srcObject = stream;
-    setVideoOn(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+      });
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+
+      setVideoOn(true);
+    } catch {
+      alert("Camera permission denied ❌");
+    }
   };
 
-  // 🚀 START
+  // 🚀 START INTERVIEW
   const startInterview = async () => {
-    const res = await fetch("http://localhost:5000/api/interview/start", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role })
-    });
+    try {
+      setLoading(true);
 
-    const data = await res.json();
+      const res = await fetch(
+        "http://localhost:5000/api/interview/start",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ role }),
+        }
+      );
 
-    setInterviewId(data.interviewId);
-    setQuestion(data.question || "⚠️ Question not received");
-    setCurrentIndex(0);
-    setAnswers([]);
-    setAnswer("");
+      const data = await res.json();
+
+      console.log("🔥 FULL RESPONSE:", data);
+
+      if (!data || !data.question) {
+        alert("❌ Question not coming from backend");
+        return;
+      }
+
+      setInterviewId(data.interviewId);
+      setQuestion(data.question);
+
+    } catch (err) {
+      console.error(err);
+      alert("❌ Backend not connected");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ➡ NEXT
   const handleNext = async () => {
     if (!answer.trim()) {
-      alert("please write an  answer");
+      alert("Write answer first ❌");
       return;
     }
 
@@ -58,55 +107,83 @@ const Interview = () => {
     updated[currentIndex] = answer;
     setAnswers(updated);
 
-    const res = await fetch("http://localhost:5000/api/interview/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ interviewId, message: answer })
-    });
+    try {
+      const res = await fetch(
+        "http://localhost:5000/api/interview/chat",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            interviewId,
+            message: answer,
+          }),
+        }
+      );
 
-    const data = await res.json();
-    setAnswer("");
+      const data = await res.json();
 
-    if (data.completed) {
-      setResult(data);
-      return;
+      console.log("NEXT RESPONSE:", data);
+
+      setAnswer("");
+
+      if (data.completed) {
+        setResult(data);
+        return;
+      }
+
+      setQuestion(data.nextQuestion || "⚠️ Question missing");
+      setCurrentIndex((prev) => prev + 1);
+
+    } catch {
+      alert("Server error ❌");
     }
-
-    setQuestion(data.nextQuestion || "⚠️ Question not coming");
-    setCurrentIndex(prev => prev + 1);
   };
 
   // ⬅ BACK
   const handleBack = () => {
     if (currentIndex === 0) return;
+
     const prev = currentIndex - 1;
+
     setCurrentIndex(prev);
     setAnswer(answers[prev] || "");
   };
 
   // ✅ SUBMIT
   const handleSubmit = async () => {
-    const res = await fetch("http://localhost:5000/api/interview/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ interviewId, message: answer })
-    });
+    try {
+      const res = await fetch(
+        "http://localhost:5000/api/interview/chat",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            interviewId,
+            message: answer,
+          }),
+        }
+      );
 
-    const data = await res.json();
-    setResult(data);
+      const data = await res.json();
+
+      setResult(data);
+
+    } catch {
+      alert("Submit failed ❌");
+    }
   };
 
   return (
     <div style={container}>
 
-      {/* 🔥 START SCREEN */}
+      {/* START SCREEN */}
       {!interviewId && (
         <div style={card}>
-          <h1 style={title}>🤖 AI Mock Interview</h1>
-
-          <p style={subtitle}>
-            Practice interviews with AI & boost your confidence 🚀
-          </p>
+          <h1 style={title}>🤖 AI Interview</h1>
 
           <select
             value={role}
@@ -119,56 +196,72 @@ const Interview = () => {
           </select>
 
           <button style={button} onClick={startInterview}>
-            🚀 Start Interview
+            {loading ? "Starting..." : "🚀 Start Interview"}
           </button>
         </div>
       )}
 
-      {/* QUESTION */}
+      {/* QUESTION SCREEN */}
       {interviewId && !result && (
         <div style={questionCard}>
 
           <img
             src="https://cdn-icons-png.flaticon.com/512/4140/4140048.png"
             alt="AI"
-            style={{ width: "80px", marginBottom: "10px" }}
+            style={{
+              width: "80px",
+              marginBottom: "15px",
+            }}
           />
 
-          <h3>Question {currentIndex + 1}</h3>
+          <h2 style={{ color: "#111827" }}>
+            Question {currentIndex + 1}
+          </h2>
 
-          <p><b>{question}</b></p>
+          {/* ✅ QUESTION FIX */}
+          <div style={questionBox}>
+            {question || "Loading question..."}
+          </div>
 
           <textarea
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
-            rows="4"
+            placeholder="Write your answer..."
             style={textarea}
           />
 
-          <div style={{ marginTop: "10px" }}>
-            <button onClick={startVoice}>🎙️ Speak</button>
-            <button onClick={startCamera} style={{ marginLeft: "10px" }}>
+          <div style={btnRow}>
+            <button style={btn} onClick={startVoice}>
+              🎙️ Speak
+            </button>
+
+            <button style={btn} onClick={startCamera}>
               🎥 Camera
             </button>
           </div>
 
           {videoOn && (
-            <video id="video" autoPlay style={{ width: "150px", marginTop: "10px" }} />
+            <video
+              ref={videoRef}
+              autoPlay
+              style={videoStyle}
+            />
           )}
 
-          <div style={{ marginTop: "15px" }}>
-            <button onClick={handleBack} disabled={currentIndex === 0}>
+          <div style={btnRow}>
+            <button style={btn} onClick={handleBack}>
               ⬅ Back
             </button>
 
-            <button onClick={handleNext} style={{ marginLeft: "10px" }}>
+            <button style={btn} onClick={handleNext}>
               Next ➡
             </button>
 
-            <button onClick={handleSubmit} style={{ marginLeft: "10px" }}>
+            <button style={btn} onClick={handleSubmit}>
               Submit ✅
             </button>
           </div>
+
         </div>
       )}
 
@@ -180,17 +273,11 @@ const Interview = () => {
           <h3>{result.performance}</h3>
 
           <p>Score: {result.totalScore}</p>
-          <p>Percentage: {result.percentage}%</p>
 
-          {result.questions?.map((q, i) => (
-            <div key={i}>
-              <p><b>Q{i + 1}:</b> {q}</p>
-              <p><b>Ans:</b> {result.answers[i]}</p>
-              <p style={{ color: "blue" }}>💡 {result.feedbacks[i]}</p>
-            </div>
-          ))}
+          <p>{result.percentage}%</p>
         </div>
       )}
+
     </div>
   );
 };
@@ -198,67 +285,113 @@ const Interview = () => {
 // 🎨 STYLES
 
 const container = {
-  height: "100vh",
+  minHeight: "100vh",
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  background: "linear-gradient(135deg, #0b1220, #1e293b)"
+  background: "linear-gradient(135deg, #0b1220, #1e293b)",
+  padding: "20px",
 };
 
 const card = {
-  background: "rgba(255,255,255,0.05)",
-  backdropFilter: "blur(15px)",
-  padding: "40px",
-  borderRadius: "20px",
+  padding: "30px",
+  borderRadius: "15px",
+  background: "#111827",
   textAlign: "center",
-  width: "350px"
+  width: "100%",
+  maxWidth: "350px",
 };
 
-const title = { color: "#fff" };
-
-const subtitle = {
-  color: "#aaa",
-  fontSize: "14px",
-  marginBottom: "20px"
+const title = {
+  color: "#fff",
 };
 
 const select = {
   width: "100%",
   padding: "12px",
-  borderRadius: "10px",
-  marginBottom: "20px",
-  background: "#111827",
-  color: "#fff"
+  margin: "15px 0",
+  borderRadius: "8px",
 };
 
 const button = {
   width: "100%",
   padding: "12px",
-  borderRadius: "10px",
   background: "linear-gradient(135deg, #6366f1, #22d3ee)",
   color: "#fff",
-  cursor: "pointer"
+  border: "none",
+  borderRadius: "8px",
+  cursor: "pointer",
+  fontWeight: "bold",
 };
 
 const questionCard = {
-  background: "#fff",
-  padding: "20px",
-  borderRadius: "12px",
-  color: "#000",
-  width: "500px"
+  background: "#ffffff",
+  padding: "25px",
+  borderRadius: "16px",
+  width: "100%",
+  maxWidth: "550px",
+  boxShadow: "0 0 25px rgba(0,0,0,0.3)",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+};
+
+const questionBox = {
+  width: "100%",
+  background: "#e5e7eb",
+  padding: "15px",
+  borderRadius: "10px",
+  color: "#111827",
+  fontWeight: "700",
+  fontSize: "18px",
+  marginTop: "10px",
+  marginBottom: "15px",
 };
 
 const textarea = {
   width: "100%",
+  padding: "12px",
   marginTop: "10px",
-  padding: "10px"
+  borderRadius: "10px",
+  border: "1px solid #ccc",
+  color: "#111827",
+  background: "#fff",
+  fontSize: "15px",
+  minHeight: "120px",
+  boxSizing: "border-box",
+};
+
+const btnRow = {
+  display: "flex",
+  gap: "10px",
+  marginTop: "15px",
+  flexWrap: "wrap",
+  justifyContent: "center",
+};
+
+const btn = {
+  padding: "10px 16px",
+  borderRadius: "8px",
+  border: "none",
+  background: "linear-gradient(135deg, #6366f1, #22d3ee)",
+  color: "#fff",
+  cursor: "pointer",
+  fontWeight: "600",
+};
+
+const videoStyle = {
+  width: "140px",
+  marginTop: "15px",
+  borderRadius: "10px",
 };
 
 const resultCard = {
   background: "#fff",
   padding: "20px",
   borderRadius: "12px",
-  color: "#000",
-  width: "500px"
+  width: "100%",
+  maxWidth: "500px",
+  textAlign: "center",
 };
+
 export default Interview;

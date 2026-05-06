@@ -6,6 +6,8 @@ export default function Home() {
 
   const [text, setText] = useState("");
   const [count, setCount] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const [hasSpoken, setHasSpoken] = useState(false);
 
   const fullText = "Crack Your Dream Job 🚀";
 
@@ -20,7 +22,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // 📊 REAL COUNT
+  // 📊 COUNT
   useEffect(() => {
     fetch("http://localhost:5000/api/interview/history")
       .then(res => res.json())
@@ -28,20 +30,42 @@ export default function Home() {
       .catch(() => setCount(0));
   }, []);
 
-  // 🔊 VOICE
+  // 📱 MOBILE
   useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  // 🎙️ VOICE
+  const speak = () => {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+
     const msg = new SpeechSynthesisUtterance(
       "Welcome to AI Mock Interview. Start your preparation now."
     );
+
     msg.lang = "en-IN";
     window.speechSynthesis.speak(msg);
+  };
+
+  useEffect(() => {
+    if (!hasSpoken) {
+      speak();
+      setHasSpoken(true);
+    }
   }, []);
 
   return (
-    <div style={container}>
+    <div style={container} onClick={speak}>
 
       {/* NAVBAR */}
-      <div style={navbar}>
+      <div style={{
+        ...navbar,
+        flexDirection: isMobile ? "column" : "row"
+      }}>
         <h2 style={logo} onClick={() => navigate("/")}>
           🤖 AI Mock
         </h2>
@@ -55,9 +79,12 @@ export default function Home() {
       </div>
 
       {/* HERO */}
-      <div style={hero}>
+      <div style={{
+        ...hero,
+        flexDirection: isMobile ? "column" : "row",
+        textAlign: isMobile ? "center" : "left"
+      }}>
 
-        {/* LEFT */}
         <div style={heroLeft}>
           <h1 style={title}>{text}</h1>
 
@@ -65,33 +92,40 @@ export default function Home() {
             Practice AI interviews, get feedback, and boost your confidence.
           </p>
 
-          {/* 🔥 FIXED COUNT */}
-          <h2 style={counter}>🚀 {count} Interviews Practiced</h2>
+          <h2 style={counter}>
+            🚀 {count} Interviews Practiced
+          </h2>
 
-          <div style={{ marginTop: "25px" }}>
-            <button style={primaryBtn} onClick={() => navigate("/select-role")}>
-              Start Interview
-            </button>
-
-            <button style={outlineBtn} onClick={() => navigate("/history")}>
-              View History
-            </button>
-          </div>
+          <button
+            style={primaryBtn}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate("/select-role");
+            }}
+          >
+            Start Interview
+          </button>
         </div>
 
-        {/* RIGHT */}
         <div style={heroRight}>
           <img
             src="https://cdn-icons-png.flaticon.com/512/4712/4712027.png"
             alt="AI"
-            style={imgStyle}
+            onClick={(e) => {
+              e.stopPropagation();
+              speak();
+            }}
+            style={img}
           />
         </div>
 
       </div>
 
       {/* FEATURES */}
-      <div style={features}>
+      <div style={{
+        ...features,
+        flexDirection: isMobile ? "column" : "row"
+      }}>
         {[
           { title: "💬 Real Questions", path: "/interview" },
           { title: "🤖 AI Feedback", path: "/dashboard" },
@@ -100,10 +134,21 @@ export default function Home() {
           <div
             key={i}
             style={card}
-            onClick={() => navigate(item.path)}   // 🔥 CLICK FIX
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(item.path);
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-10px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+            }}
           >
-            <h3>{item.title}</h3>
-            <p style={{ color: "#aaa" }}>Explore now</p>
+            <h3 style={{ fontSize: "18px" }}>{item.title}</h3>
+            <p style={{ color: "#aaa", marginTop: "10px" }}>
+              Click to explore
+            </p>
           </div>
         ))}
       </div>
@@ -118,41 +163,36 @@ export default function Home() {
 const container = {
   minHeight: "100vh",
   background: "linear-gradient(135deg, #020617, #0f172a)",
-  color: "#fff",
-  fontFamily: "Segoe UI"
+  color: "#fff"
 };
 
 const navbar = {
   display: "flex",
   justifyContent: "space-between",
-  alignItems: "center",
-  padding: "20px 40px",
-  background: "rgba(255,255,255,0.05)",
-  backdropFilter: "blur(10px)"
+  padding: "20px"
 };
 
 const logo = {
-  cursor: "pointer",
-  fontWeight: "bold"
+  cursor: "pointer"
 };
 
 const navRight = {
   display: "flex",
-  gap: "15px"
+  gap: "10px"
 };
 
 const navBtn = {
   background: "transparent",
-  color: "#cbd5f5",
+  color: "#fff",
   border: "none",
   cursor: "pointer"
 };
 
 const hero = {
   display: "flex",
-  justifyContent: "space-between",
   alignItems: "center",
-  padding: "80px 60px"
+  justifyContent: "space-between",
+  padding: "40px"
 };
 
 const heroLeft = {
@@ -160,64 +200,53 @@ const heroLeft = {
 };
 
 const heroRight = {
-  flex: 1,
-  display: "flex",
-  justifyContent: "flex-end"   // 🔥 RIGHT FIX
+  display: "flex"
 };
 
 const title = {
-  fontSize: "48px",
-  background: "linear-gradient(90deg, #6366f1, #22d3ee)",
-  WebkitBackgroundClip: "text",
-  WebkitTextFillColor: "transparent"
+  fontSize: "40px",
+  color: "#22d3ee"
 };
 
 const subtitle = {
-  marginTop: "15px",
-  color: "#cbd5f5"
+  color: "#aaa"
 };
 
 const counter = {
-  marginTop: "20px",
+  marginTop: "10px",
   color: "#22d3ee"
 };
 
 const primaryBtn = {
-  padding: "12px 22px",
-  borderRadius: "10px",
-  border: "none",
-  background: "linear-gradient(135deg, #6366f1, #22d3ee)",
+  padding: "10px 20px",
+  background: "#6366f1",
   color: "#fff",
+  border: "none",
   cursor: "pointer",
-  marginRight: "10px"
-};
-
-const outlineBtn = {
-  padding: "12px 22px",
-  borderRadius: "10px",
-  border: "1px solid #6366f1",
-  background: "transparent",
-  color: "#6366f1",
-  cursor: "pointer"
+  marginTop: "10px"
 };
 
 const features = {
   display: "flex",
   justifyContent: "center",
-  gap: "25px",
-  padding: "40px"
+  gap: "30px",
+  padding: "60px",
+  flexWrap: "wrap"
 };
 
 const card = {
-  background: "rgba(255,255,255,0.05)",
-  padding: "25px",
-  borderRadius: "15px",
-  width: "220px",
+  background: "rgba(255,255,255,0.08)",
+  padding: "30px",
+  borderRadius: "20px",
+  width: "280px",
   textAlign: "center",
+  cursor: "pointer",
+  backdropFilter: "blur(10px)",
+  boxShadow: "0 0 20px rgba(0,0,0,0.4)",
+  transition: "0.3s"
+};
+
+const img = {
+  width: "250px",
   cursor: "pointer"
 };
-
-const imgStyle = {
-  width: "320px"
-};
-
