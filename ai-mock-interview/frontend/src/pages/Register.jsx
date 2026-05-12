@@ -2,31 +2,39 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Register() {
+
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // ✅ DEPLOYED BACKEND URL
+  // ✅ YOUR DEPLOYED BACKEND
   const API_URL =
     "https://ai-mock-interview-ny3i.onrender.com";
 
   const handleRegister = async () => {
+
     try {
 
+      // ✅ VALIDATION
       if (!name || !email || !password) {
         alert("Please fill all fields ❌");
         return;
       }
 
+      setLoading(true);
+
       const res = await fetch(
         `${API_URL}/api/auth/register`,
         {
           method: "POST",
+
           headers: {
             "Content-Type": "application/json",
           },
+
           body: JSON.stringify({
             name,
             email,
@@ -35,26 +43,51 @@ export default function Register() {
         }
       );
 
+      // ✅ SAFE RESPONSE
       const data = await res.json();
 
       console.log("REGISTER RESPONSE:", data);
 
+      // ✅ ERROR
       if (!res.ok) {
-        alert(data.message || "Register failed ❌");
+
+        alert(
+          data.message ||
+          data.error ||
+          "Register failed ❌"
+        );
+
         return;
       }
 
+      // ✅ SUCCESS
       alert("Registered Successfully ✅");
 
+      // 🔥 CLEAR INPUTS
+      setName("");
+      setEmail("");
+      setPassword("");
+
+      // 👉 LOGIN PAGE
       navigate("/login");
 
     } catch (err) {
-      console.error(err);
-      alert("Server error ❌");
+
+      console.error("REGISTER ERROR:", err);
+
+      alert(
+        "Backend not connected ❌"
+      );
+
+    } finally {
+
+      setLoading(false);
+
     }
   };
 
   return (
+
     <div style={container}>
 
       <div style={card}>
@@ -67,43 +100,58 @@ export default function Register() {
           Create your AI Mock Interview account
         </p>
 
+        {/* NAME */}
         <input
           type="text"
           placeholder="Enter Name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) =>
+            setName(e.target.value)
+          }
           style={input}
         />
 
+        {/* EMAIL */}
         <input
           type="email"
           placeholder="Enter Email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) =>
+            setEmail(e.target.value)
+          }
           style={input}
         />
 
+        {/* PASSWORD */}
         <input
           type="password"
           placeholder="Enter Password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) =>
+            setPassword(e.target.value)
+          }
           style={input}
         />
 
+        {/* BUTTON */}
         <button
           style={button}
           onClick={handleRegister}
         >
-          Register
+          {loading
+            ? "Registering..."
+            : "Register"}
         </button>
 
         <p style={text}>
+
           Already have an account?{" "}
 
           <span
             style={link}
-            onClick={() => navigate("/login")}
+            onClick={() =>
+              navigate("/login")
+            }
           >
             Login
           </span>
@@ -129,14 +177,16 @@ const container = {
 };
 
 const card = {
-  background: "rgba(255,255,255,0.08)",
+  background:
+    "rgba(255,255,255,0.08)",
   backdropFilter: "blur(12px)",
   padding: "35px",
   borderRadius: "20px",
   width: "100%",
   maxWidth: "380px",
   textAlign: "center",
-  boxShadow: "0 0 25px rgba(0,0,0,0.4)",
+  boxShadow:
+    "0 0 25px rgba(0,0,0,0.4)",
 };
 
 const title = {
