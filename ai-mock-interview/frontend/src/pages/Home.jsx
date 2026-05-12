@@ -11,36 +11,58 @@ export default function Home() {
 
   const fullText = "Crack Your Dream Job 🚀";
 
+  // ✅ DEPLOYED BACKEND
+  const API_URL =
+    "https://ai-mock-interview-ny3i.onrender.com";
+
   // ✨ TYPEWRITER
   useEffect(() => {
     let i = 0;
+
     const interval = setInterval(() => {
       setText(fullText.slice(0, i));
+
       i++;
-      if (i > fullText.length) clearInterval(interval);
+
+      if (i > fullText.length) {
+        clearInterval(interval);
+      }
     }, 50);
+
     return () => clearInterval(interval);
   }, []);
 
-  // 📊 COUNT
+  // 📊 INTERVIEW COUNT
   useEffect(() => {
-    fetch("http://localhost:5000/api/interview/history")
-      .then(res => res.json())
-      .then(data => setCount(data.length))
-      .catch(() => setCount(0));
+    fetch(`${API_URL}/api/interview/history`)
+      .then((res) => res.json())
+      .then((data) => {
+        setCount(data.length || 0);
+      })
+      .catch((err) => {
+        console.log(err);
+        setCount(0);
+      });
   }, []);
 
-  // 📱 MOBILE
+  // 📱 MOBILE RESPONSIVE
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
+    const check = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
     check();
+
     window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+
+    return () =>
+      window.removeEventListener("resize", check);
   }, []);
 
   // 🎙️ VOICE
   const speak = () => {
     if (!("speechSynthesis" in window)) return;
+
     window.speechSynthesis.cancel();
 
     const msg = new SpeechSynthesisUtterance(
@@ -48,9 +70,11 @@ export default function Home() {
     );
 
     msg.lang = "en-IN";
+
     window.speechSynthesis.speak(msg);
   };
 
+  // 🔥 AUTO SPEAK ONCE
   useEffect(() => {
     if (!hasSpoken) {
       speak();
@@ -59,37 +83,74 @@ export default function Home() {
   }, []);
 
   return (
-    <div style={container} onClick={speak}>
+    <div style={container}>
 
       {/* NAVBAR */}
-      <div style={{
-        ...navbar,
-        flexDirection: isMobile ? "column" : "row"
-      }}>
-        <h2 style={logo} onClick={() => navigate("/")}>
+      <div
+        style={{
+          ...navbar,
+          flexDirection: isMobile ? "column" : "row",
+        }}
+      >
+        <h2
+          style={logo}
+          onClick={() => navigate("/")}
+        >
           🤖 AI Mock
         </h2>
 
         <div style={navRight}>
-          <button style={navBtn} onClick={() => navigate("/dashboard")}>Dashboard</button>
-          <button style={navBtn} onClick={() => navigate("/history")}>History</button>
-          <button style={navBtn} onClick={() => navigate("/login")}>Login</button>
-          <button style={primaryBtn} onClick={() => navigate("/register")}>Register</button>
+
+          <button
+            style={navBtn}
+            onClick={() => navigate("/dashboard")}
+          >
+            Dashboard
+          </button>
+
+          <button
+            style={navBtn}
+            onClick={() => navigate("/history")}
+          >
+            History
+          </button>
+
+          <button
+            style={navBtn}
+            onClick={() => navigate("/login")}
+          >
+            Login
+          </button>
+
+          <button
+            style={primaryBtn}
+            onClick={() => navigate("/register")}
+          >
+            Register
+          </button>
+
         </div>
       </div>
 
       {/* HERO */}
-      <div style={{
-        ...hero,
-        flexDirection: isMobile ? "column" : "row",
-        textAlign: isMobile ? "center" : "left"
-      }}>
+      <div
+        style={{
+          ...hero,
+          flexDirection: isMobile ? "column" : "row",
+          textAlign: isMobile ? "center" : "left",
+        }}
+      >
 
+        {/* LEFT */}
         <div style={heroLeft}>
-          <h1 style={title}>{text}</h1>
+
+          <h1 style={title}>
+            {text}
+          </h1>
 
           <p style={subtitle}>
-            Practice AI interviews, get feedback, and boost your confidence.
+            Practice AI interviews,
+            get feedback and boost your confidence.
           </p>
 
           <h2 style={counter}>
@@ -105,9 +166,12 @@ export default function Home() {
           >
             Start Interview
           </button>
+
         </div>
 
+        {/* RIGHT */}
         <div style={heroRight}>
+
           <img
             src="https://cdn-icons-png.flaticon.com/512/4712/4712027.png"
             alt="AI"
@@ -117,19 +181,33 @@ export default function Home() {
             }}
             style={img}
           />
-        </div>
 
+        </div>
       </div>
 
       {/* FEATURES */}
-      <div style={{
-        ...features,
-        flexDirection: isMobile ? "column" : "row"
-      }}>
+      <div
+        style={{
+          ...features,
+          flexDirection: isMobile ? "column" : "row",
+        }}
+      >
+
         {[
-          { title: "💬 Real Questions", path: "/interview" },
-          { title: "🤖 AI Feedback", path: "/dashboard" },
-          { title: "📊 Performance", path: "/history" }
+          {
+            title: "💬 Real Questions",
+            path: "/interview",
+          },
+
+          {
+            title: "🤖 AI Feedback",
+            path: "/dashboard",
+          },
+
+          {
+            title: "📊 Performance",
+            path: "/history",
+          },
         ].map((item, i) => (
           <div
             key={i}
@@ -139,114 +217,148 @@ export default function Home() {
               navigate(item.path);
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-10px)";
+              e.currentTarget.style.transform =
+                "translateY(-10px)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.transform =
+                "translateY(0)";
             }}
           >
-            <h3 style={{ fontSize: "18px" }}>{item.title}</h3>
-            <p style={{ color: "#aaa", marginTop: "10px" }}>
+
+            <h3 style={cardTitle}>
+              {item.title}
+            </h3>
+
+            <p style={cardText}>
               Click to explore
             </p>
+
           </div>
         ))}
-      </div>
 
+      </div>
     </div>
   );
 }
-
 
 // 🎨 STYLES
 
 const container = {
   minHeight: "100vh",
-  background: "linear-gradient(135deg, #020617, #0f172a)",
-  color: "#fff"
+  background:
+    "linear-gradient(135deg, #020617, #0f172a)",
+  color: "#fff",
+  overflowX: "hidden",
 };
 
 const navbar = {
   display: "flex",
   justifyContent: "space-between",
-  padding: "20px"
+  alignItems: "center",
+  padding: "20px 30px",
 };
 
 const logo = {
-  cursor: "pointer"
+  cursor: "pointer",
+  fontSize: "28px",
 };
 
 const navRight = {
   display: "flex",
-  gap: "10px"
+  gap: "12px",
+  flexWrap: "wrap",
 };
 
 const navBtn = {
   background: "transparent",
   color: "#fff",
   border: "none",
-  cursor: "pointer"
+  cursor: "pointer",
+  fontSize: "15px",
 };
 
 const hero = {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  padding: "40px"
+  padding: "50px 30px",
+  gap: "30px",
 };
 
 const heroLeft = {
-  maxWidth: "500px"
+  maxWidth: "550px",
 };
 
 const heroRight = {
-  display: "flex"
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
 };
 
 const title = {
-  fontSize: "40px",
-  color: "#22d3ee"
+  fontSize: "52px",
+  fontWeight: "bold",
+  color: "#22d3ee",
+  lineHeight: "65px",
 };
 
 const subtitle = {
-  color: "#aaa"
+  color: "#cbd5e1",
+  marginTop: "18px",
+  fontSize: "18px",
+  lineHeight: "30px",
 };
 
 const counter = {
-  marginTop: "10px",
-  color: "#22d3ee"
+  marginTop: "20px",
+  color: "#22d3ee",
+  fontSize: "24px",
 };
 
 const primaryBtn = {
-  padding: "10px 20px",
-  background: "#6366f1",
+  padding: "14px 28px",
+  background:
+    "linear-gradient(135deg, #6366f1, #22d3ee)",
   color: "#fff",
   border: "none",
+  borderRadius: "12px",
   cursor: "pointer",
-  marginTop: "10px"
+  marginTop: "20px",
+  fontWeight: "bold",
+  fontSize: "16px",
 };
 
 const features = {
   display: "flex",
   justifyContent: "center",
   gap: "30px",
-  padding: "60px",
-  flexWrap: "wrap"
+  padding: "60px 20px",
+  flexWrap: "wrap",
 };
 
 const card = {
   background: "rgba(255,255,255,0.08)",
-  padding: "30px",
-  borderRadius: "20px",
+  padding: "35px",
+  borderRadius: "22px",
   width: "280px",
   textAlign: "center",
   cursor: "pointer",
   backdropFilter: "blur(10px)",
   boxShadow: "0 0 20px rgba(0,0,0,0.4)",
-  transition: "0.3s"
+  transition: "0.3s",
+};
+
+const cardTitle = {
+  fontSize: "22px",
+};
+
+const cardText = {
+  color: "#cbd5e1",
+  marginTop: "12px",
 };
 
 const img = {
-  width: "250px",
-  cursor: "pointer"
+  width: "280px",
+  cursor: "pointer",
 };

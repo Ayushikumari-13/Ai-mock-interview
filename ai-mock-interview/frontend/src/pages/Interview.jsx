@@ -16,6 +16,10 @@ const Interview = () => {
 
   const videoRef = useRef(null);
 
+  // ✅ BACKEND URL
+  const API_URL =
+    "https://ai-mock-interview-ny3i.onrender.com";
+
   // 🔥 ROLE FROM SELECT PAGE
   useEffect(() => {
     if (location.state?.role) {
@@ -34,6 +38,7 @@ const Interview = () => {
     }
 
     const recognition = new SpeechRecognition();
+
     recognition.lang = "en-IN";
 
     recognition.onresult = (event) => {
@@ -55,6 +60,7 @@ const Interview = () => {
       }
 
       setVideoOn(true);
+
     } catch {
       alert("Camera permission denied ❌");
     }
@@ -66,7 +72,7 @@ const Interview = () => {
       setLoading(true);
 
       const res = await fetch(
-        "http://localhost:5000/api/interview/start",
+        `${API_URL}/api/interview/start`,
         {
           method: "POST",
           headers: {
@@ -78,15 +84,18 @@ const Interview = () => {
 
       const data = await res.json();
 
-      console.log("🔥 FULL RESPONSE:", data);
+      console.log("🔥 START RESPONSE:", data);
 
+      // ✅ FIX
       if (!data || !data.question) {
-        alert("❌ Question not coming from backend");
+        alert("❌ Question not received from backend");
         return;
       }
 
       setInterviewId(data.interviewId);
-      setQuestion(data.question);
+
+      // ✅ QUESTION FIX
+      setQuestion(String(data.question));
 
     } catch (err) {
       console.error(err);
@@ -96,7 +105,7 @@ const Interview = () => {
     }
   };
 
-  // ➡ NEXT
+  // ➡ NEXT QUESTION
   const handleNext = async () => {
     if (!answer.trim()) {
       alert("Write answer first ❌");
@@ -104,12 +113,14 @@ const Interview = () => {
     }
 
     const updated = [...answers];
+
     updated[currentIndex] = answer;
+
     setAnswers(updated);
 
     try {
       const res = await fetch(
-        "http://localhost:5000/api/interview/chat",
+        `${API_URL}/api/interview/chat`,
         {
           method: "POST",
           headers: {
@@ -124,20 +135,24 @@ const Interview = () => {
 
       const data = await res.json();
 
-      console.log("NEXT RESPONSE:", data);
+      console.log("🔥 NEXT RESPONSE:", data);
 
       setAnswer("");
 
+      // ✅ INTERVIEW FINISHED
       if (data.completed) {
         setResult(data);
         return;
       }
 
-      setQuestion(data.nextQuestion || "⚠️ Question missing");
+      // ✅ NEXT QUESTION FIX
+      setQuestion(String(data.nextQuestion));
+
       setCurrentIndex((prev) => prev + 1);
 
-    } catch {
-      alert("Server error ❌");
+    } catch (err) {
+      console.log(err);
+      alert("❌ Server error");
     }
   };
 
@@ -148,6 +163,7 @@ const Interview = () => {
     const prev = currentIndex - 1;
 
     setCurrentIndex(prev);
+
     setAnswer(answers[prev] || "");
   };
 
@@ -155,7 +171,7 @@ const Interview = () => {
   const handleSubmit = async () => {
     try {
       const res = await fetch(
-        "http://localhost:5000/api/interview/chat",
+        `${API_URL}/api/interview/chat`,
         {
           method: "POST",
           headers: {
@@ -195,7 +211,10 @@ const Interview = () => {
             <option>Full Stack Developer</option>
           </select>
 
-          <button style={button} onClick={startInterview}>
+          <button
+            style={button}
+            onClick={startInterview}
+          >
             {loading ? "Starting..." : "🚀 Start Interview"}
           </button>
         </div>
@@ -205,6 +224,7 @@ const Interview = () => {
       {interviewId && !result && (
         <div style={questionCard}>
 
+          {/* AI IMAGE */}
           <img
             src="https://cdn-icons-png.flaticon.com/512/4140/4140048.png"
             alt="AI"
@@ -214,15 +234,16 @@ const Interview = () => {
             }}
           />
 
-          <h2 style={{ color: "#111827" }}>
+          <h2 style={questionTitle}>
             Question {currentIndex + 1}
           </h2>
 
-          {/* ✅ QUESTION FIX */}
+          {/* ✅ QUESTION BOX */}
           <div style={questionBox}>
             {question || "Loading question..."}
           </div>
 
+          {/* ANSWER */}
           <textarea
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
@@ -230,16 +251,24 @@ const Interview = () => {
             style={textarea}
           />
 
+          {/* BUTTONS */}
           <div style={btnRow}>
-            <button style={btn} onClick={startVoice}>
+            <button
+              style={btn}
+              onClick={startVoice}
+            >
               🎙️ Speak
             </button>
 
-            <button style={btn} onClick={startCamera}>
+            <button
+              style={btn}
+              onClick={startCamera}
+            >
               🎥 Camera
             </button>
           </div>
 
+          {/* VIDEO */}
           {videoOn && (
             <video
               ref={videoRef}
@@ -248,20 +277,31 @@ const Interview = () => {
             />
           )}
 
+          {/* ACTION BUTTONS */}
           <div style={btnRow}>
-            <button style={btn} onClick={handleBack}>
+
+            <button
+              style={btn}
+              onClick={handleBack}
+            >
               ⬅ Back
             </button>
 
-            <button style={btn} onClick={handleNext}>
+            <button
+              style={btn}
+              onClick={handleNext}
+            >
               Next ➡
             </button>
 
-            <button style={btn} onClick={handleSubmit}>
+            <button
+              style={btn}
+              onClick={handleSubmit}
+            >
               Submit ✅
             </button>
-          </div>
 
+          </div>
         </div>
       )}
 
@@ -277,7 +317,6 @@ const Interview = () => {
           <p>{result.percentage}%</p>
         </div>
       )}
-
     </div>
   );
 };
@@ -289,7 +328,8 @@ const container = {
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  background: "linear-gradient(135deg, #0b1220, #1e293b)",
+  background:
+    "linear-gradient(135deg, #0b1220, #1e293b)",
   padding: "20px",
 };
 
@@ -316,7 +356,8 @@ const select = {
 const button = {
   width: "100%",
   padding: "12px",
-  background: "linear-gradient(135deg, #6366f1, #22d3ee)",
+  background:
+    "linear-gradient(135deg, #6366f1, #22d3ee)",
   color: "#fff",
   border: "none",
   borderRadius: "8px",
@@ -336,6 +377,11 @@ const questionCard = {
   alignItems: "center",
 };
 
+const questionTitle = {
+  color: "#111827",
+  marginBottom: "10px",
+};
+
 const questionBox = {
   width: "100%",
   background: "#e5e7eb",
@@ -346,6 +392,7 @@ const questionBox = {
   fontSize: "18px",
   marginTop: "10px",
   marginBottom: "15px",
+  lineHeight: "28px",
 };
 
 const textarea = {
@@ -373,7 +420,8 @@ const btn = {
   padding: "10px 16px",
   borderRadius: "8px",
   border: "none",
-  background: "linear-gradient(135deg, #6366f1, #22d3ee)",
+  background:
+    "linear-gradient(135deg, #6366f1, #22d3ee)",
   color: "#fff",
   cursor: "pointer",
   fontWeight: "600",

@@ -8,17 +8,36 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  // ✅ DEPLOYED BACKEND URL
+  const API_URL =
+    "https://ai-mock-interview-ny3i.onrender.com";
+
   const handleRegister = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ name, email, password })
-      });
+
+      if (!name || !email || !password) {
+        alert("Please fill all fields ❌");
+        return;
+      }
+
+      const res = await fetch(
+        `${API_URL}/api/auth/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+          }),
+        }
+      );
 
       const data = await res.json();
+
+      console.log("REGISTER RESPONSE:", data);
 
       if (!res.ok) {
         alert(data.message || "Register failed ❌");
@@ -27,7 +46,6 @@ export default function Register() {
 
       alert("Registered Successfully ✅");
 
-      // 👉 redirect to login
       navigate("/login");
 
     } catch (err) {
@@ -38,8 +56,16 @@ export default function Register() {
 
   return (
     <div style={container}>
+
       <div style={card}>
-        <h2>📝 Register</h2>
+
+        <h1 style={title}>
+          📝 Register
+        </h1>
+
+        <p style={subtitle}>
+          Create your AI Mock Interview account
+        </p>
 
         <input
           type="text"
@@ -65,52 +91,98 @@ export default function Register() {
           style={input}
         />
 
-        <button style={button} onClick={handleRegister}>
+        <button
+          style={button}
+          onClick={handleRegister}
+        >
           Register
         </button>
 
-        <p style={{ marginTop: "10px" }}>
+        <p style={text}>
           Already have an account?{" "}
+
           <span
-            style={{ color: "blue", cursor: "pointer" }}
+            style={link}
             onClick={() => navigate("/login")}
           >
             Login
           </span>
+
         </p>
+
       </div>
+
     </div>
   );
 }
 
-// same styles
+// 🎨 STYLES
+
 const container = {
-  height: "100vh",
+  minHeight: "100vh",
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  background: "#0b1220"
+  background:
+    "linear-gradient(135deg, #020617, #0f172a)",
+  padding: "20px",
 };
 
 const card = {
-  background: "#fff",
-  padding: "30px",
-  borderRadius: "12px",
-  width: "300px",
-  textAlign: "center"
+  background: "rgba(255,255,255,0.08)",
+  backdropFilter: "blur(12px)",
+  padding: "35px",
+  borderRadius: "20px",
+  width: "100%",
+  maxWidth: "380px",
+  textAlign: "center",
+  boxShadow: "0 0 25px rgba(0,0,0,0.4)",
+};
+
+const title = {
+  color: "#fff",
+  marginBottom: "10px",
+};
+
+const subtitle = {
+  color: "#cbd5e1",
+  marginBottom: "25px",
+  fontSize: "14px",
 };
 
 const input = {
   width: "100%",
-  padding: "10px",
-  marginBottom: "10px"
+  padding: "14px",
+  marginBottom: "15px",
+  borderRadius: "10px",
+  border: "1px solid #334155",
+  background: "#111827",
+  color: "#fff",
+  fontSize: "15px",
+  outline: "none",
+  boxSizing: "border-box",
 };
 
 const button = {
   width: "100%",
-  padding: "10px",
-  background: "#2563eb",
+  padding: "14px",
+  background:
+    "linear-gradient(135deg, #6366f1, #22d3ee)",
   color: "#fff",
   border: "none",
-  cursor: "pointer"
+  borderRadius: "10px",
+  cursor: "pointer",
+  fontWeight: "bold",
+  fontSize: "16px",
+};
+
+const text = {
+  marginTop: "18px",
+  color: "#cbd5e1",
+};
+
+const link = {
+  color: "#22d3ee",
+  cursor: "pointer",
+  fontWeight: "bold",
 };
